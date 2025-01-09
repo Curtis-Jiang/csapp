@@ -1,0 +1,106 @@
+# Jiangcan 2019011325
+
+.pos 0
+init:
+irmovl Stack, %esp
+# Set up the stack pointer
+irmovl Stack, %ebp
+# Set up the base pointer
+call Main
+# Execute the main program
+halt
+# Terminate the program
+
+.align 4
+# Source block
+src:
+.long 0x00a
+.long 0x0b0
+.long 0xc00
+# Destination block
+dest:
+.long 0x111
+.long 0x222
+.long 0x333
+
+
+Main:
+pushl %ebp
+rrmovl %esp,%ebp
+pushl %ebx
+pushl %esi
+pushl %edi
+# Initialize parameters
+irmovl src,%ebx
+irmovl dest,%esi
+irmovl $3,%edi
+pushl %ebx
+pushl %esi
+pushl %edi
+call Copy
+popl %edi
+popl %esi
+popl %ebx
+popl %edi
+popl %esi
+popl %ebx
+popl %ebp
+ret
+
+Copy:
+# Initial stage: store ebp and registers
+pushl %ebp
+rrmovl %esp,%ebp
+pushl %edx
+pushl %ecx
+
+# Read parameters
+# edx = src, ebx = dest, ecx = len
+mrmovl 16(%ebp),%edx
+mrmovl 12(%ebp),%ebx
+mrmovl 8(%ebp),%ecx
+
+# eax = result
+# result = 0
+irmovl $0,%eax
+
+// Initial loop condition
+// if(len == 0)
+andl %ecx,%ecx
+jle End
+
+// Loop
+Loop:
+# edi = val, val = *src
+mrmovl (%edx),%edi
+
+# src += 4, esi = 4
+irmovl $0x04,%esi
+addl %esi,%edx
+
+# *dest = val
+rmmovl %edi,(%ebx)
+
+# dest += 4
+addl %esi,%ebx
+
+# result ^= val
+xorl %edi,%eax
+
+# len --, esi = 1
+irmovl $0x01,%esi
+subl %esi,%ecx
+
+# Loop exit condition
+andl %ecx,%ecx
+jg Loop
+
+
+End:
+popl %ecx
+popl %edx
+popl %ebp
+ret
+
+.pos 0x500
+Stack:
